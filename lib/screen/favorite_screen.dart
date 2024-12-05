@@ -1,96 +1,48 @@
+// lib/favorite_screen.dart
 import 'package:flutter/material.dart';
-import 'package:responsi_naura/model/anime_model.dart';
-import 'package:responsi_naura/services/api_services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'detail_screen.dart';
+import 'package:responsi_naura/model/amiibo.dart';
+import 'package:responsi_naura/services/local_storage_service.dart';
 
-class FavoritesScreen extends StatefulWidget {
-  const FavoritesScreen({Key? key}) : super(key: key);
+class FavoriteScreen extends StatelessWidget {
+  final List<Amiibo> favoriteAmiibo;
 
-  @override
-  _FavoritesScreenState createState() => _FavoritesScreenState();
-}
+  FavoriteScreen({required this.favoriteAmiibo});
 
-class _FavoritesScreenState extends State<FavoritesScreen> {
-  late Future<List<String>> _favoriteAnime;
-
-  @override
-  void initState() {
-    super.initState();
-    _favoriteAnime = _loadFavorites();
-  }
-
-  // Memuat daftar favorit dari SharedPreferences
-  Future<List<String>> _loadFavorites() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList('favorites') ?? [];
+  void removeFavorite(BuildContext context, Amiibo amiibo, int index) {
+    LocalStorageService().removeFavorite(amiibo);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${amiibo.name} removed from favorites!')),
+    );
+    favoriteAmiibo.removeAt(index);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Favorite Anime'),
+        title: Text('Favorite Amiibo'),
       ),
-      body: FutureBuilder<List<String>>(
-        future: _favoriteAnime, // Memuat daftar ID makanan favorit
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-            final favoriteAnimeIds = snapshot.data!;
-            
-            return FutureBuilder<List<AnimeModel>>(
-              future: ApiService().fet(),
-              builder: (context, mealSnapshot) {
-                if (mealSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (animeSnapshot.hasError) {
-                  return Center(child: Text('Error: ${animeSnapshot.error}'));
-                } else if (mealSnapshot.hasData) {
-                  final AnimeModel = mealSnapshot.data!;
-                  final favoriteMeals = AnimeModel.where((AnimeModel) => favoriteAnimeIds.contains(AnimeModel.id)).toList();
-
-                  return ListView.builder(
-                    itemCount: favoriteMeals.length,
-                    itemBuilder: (context, index) {
-                      final anime = favoriteAnimeIds[index];
-
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(10),
-                          title: Text(anime.name),
-                          leading: Image.network(
-                            anime.image,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DetailScreen(anime), // Navigate to detail screen
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  );
-                } else {
-                  return const Center(child: Text('No anime available'));
-                }
+      body: favoriteAmiibo.isEmpty
+          ? Center(child: Text('No favorite Amiibo added.'))
+          : ListView.builder(
+              itemCount: favoriteAmiibo.length,
+              itemBuilder: (context, index) {
+                final amiibo = favoriteAmiibo[index];
+                return Card(
+                  child: ListTile(
+                    leading: Image.network(amiibo.image),
+                    title: Text(amiibo.name),
+                    subtitle: Text(amiibo.character),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        removeFavorite(context, amiibo, index);
+                      },
+                    ),
+                  ),
+                );
               },
-            );
-          } else {
-            return const Center(child: Text('No favorite anime found.'));
-          }
-        },
-      ),
+            ),
     );
   }
 }

@@ -20,19 +20,37 @@ class RegisterScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Register')),
-      body: Padding(
+      appBar: AppBar(
+        title: const Text('Register'),
+        backgroundColor: Colors.blue, // Warna biru untuk AppBar
+      ),
+      body: Container(
+        color: Colors.white, // Warna dasar putih
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Judul
+            Text(
+              'Buat Akun Baru',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue, // Warna teks biru
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+
             // Username input field
             TextField(
               controller: usernameController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Username',
                 hintText: 'Masukkan username Anda',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -40,10 +58,12 @@ class RegisterScreen extends StatelessWidget {
             // Password input field
             TextField(
               controller: passwordController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Password',
                 hintText: 'Masukkan password Anda',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
               ),
               obscureText: true,
             ),
@@ -54,7 +74,11 @@ class RegisterScreen extends StatelessWidget {
               onPressed: _register,
               child: const Text('Register'),
               style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue, // Warna tombol biru
                 minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0), // Sudut membulat
+                ),
               ),
             ),
 
@@ -67,7 +91,7 @@ class RegisterScreen extends StatelessWidget {
                 child: const Text(
                   'Sudah punya akun? Klik di sini untuk login',
                   style: TextStyle(
-                    color: Colors.blue,
+                    color: Colors.blue, // Warna teks biru
                     fontWeight: FontWeight.bold,
                   ),
                 ),

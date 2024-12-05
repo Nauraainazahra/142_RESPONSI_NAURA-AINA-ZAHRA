@@ -1,89 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:responsi_naura/model/anime_model.dart';
-import '../services/api_services.dart';
+import 'package:responsi_naura/model/amiibo.dart';
+import 'package:responsi_naura/services/local_storage_service.dart';
 
 class DetailScreen extends StatelessWidget {
-  final String animeId;
+final Amiibo amiibo;
 
-  const DetailScreen(this.animeId, {Key? key}) : super(key: key);
+DetailScreen({required this.amiibo});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Meal Details'),
-        backgroundColor: Colors.pinkAccent, // Ubah warna AppBar sesuai tema
-      ),
-      body: FutureBuilder<AnimeModel>(
-        future: ApiService().fetchMealDetails(animeId), // Fetch meal details
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            final meal = snapshot.data!;
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Judul makanan dengan style yang lebih menonjol
-                  Text(
-                    meal.name,
-                    style: const TextStyle(
-                      fontSize: 28, 
-                      fontWeight: FontWeight.bold,
-                      color: Colors.pinkAccent, // Sesuaikan dengan warna tema
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // // Kategori dengan sedikit lebih besar
-                  // Text(
-                  //   'Category: ${AnimeModel.type}',
-                  //   style: const TextStyle(fontSize: 18, color: Colors.grey),
-                  // ),
-                  // const SizedBox(height: 16),
-                  
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      meal.image,
-                      width: double.infinity,
-                      height: 250,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Menambahkan divider untuk memisahkan bagian
-                  const Divider(color: Colors.grey, thickness: 1.5),
-                  const SizedBox(height: 16),
-                  
-                  // Instructions section
-                  const Text(
-                    'Instructions:',
-                    style: TextStyle(
-                      fontSize: 20, 
-                      fontWeight: FontWeight.w600, 
-                      color: Colors.pinkAccent,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  
-                  // Menampilkan instruksi
-                  // Text(
-                  //   meal.instructions,
-                  //   style: const TextStyle(fontSize: 16, height: 1.6),
-                  // ),
-                ],
-              ),
-            );
-          } else {
-            return const Center(child: Text('Anime not found'));
-          }
-        },
-      ),
-    );
-  }
+void toggleFavorite(BuildContext context) {
+LocalStorageService().toggleFavorite(amiibo);
+ScaffoldMessenger.of(context).showSnackBar(
+SnackBar(content: Text('${amiibo.name} added to favorites!')),
+);
+}
+
+@override
+Widget build(BuildContext context) {
+return Scaffold(
+appBar: AppBar(
+title: Text(amiibo.name),
+actions: [
+IconButton(
+icon: Icon(Icons.favorite_border),
+onPressed: () => toggleFavorite(context),
+),
+],
+),
+body: Padding(
+padding: const EdgeInsets.all(16.0),
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.start,
+children: [
+Image.network(amiibo.image),
+SizedBox(height: 16.0),
+Text(
+'Character: ${amiibo.character}',
+style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+),
+SizedBox(height: 8.0),
+Text('Game Series: ${amiibo.gameSeries}'),
+SizedBox(height: 8.0),
+Text('Amiibo Series: ${amiibo.amiiboSeries}'),
+SizedBox(height: 8.0),
+Text('Type: ${amiibo.type}'),
+],
+),
+),
+);
+}
 }

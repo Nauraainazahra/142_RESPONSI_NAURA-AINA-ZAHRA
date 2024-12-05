@@ -15,51 +15,63 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscureText = true;
 
-  // Fungsi untuk login dan menyimpan username di SharedPreferences
   Future<void> _login() async {
     final String username = _usernameController.text;
     final String password = _passwordController.text;
 
-    // Validasi username dan password (bisa disesuaikan)
     if (username.isNotEmpty && password.isNotEmpty) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('username', username);  // Menyimpan username di SharedPreferences
+      await prefs.setString('username', username);
 
-      // Navigasi ke halaman HomeScreen setelah login berhasil
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(builder: (context) => Home()),
       );
     } else {
-      // Menampilkan pesan kesalahan jika username atau password kosong
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Username dan password tidak boleh kosong')),
       );
     }
   }
-
+                  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login'),
+        backgroundColor: Colors.blue, // Warna biru untuk AppBar
       ),
-      body: Padding(
+      body: Container(
+        color: Colors.white, // Warna dasar putih
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Judul
+            Text(
+              'Selamat Datang',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue, // Warna teks biru
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+
             // Username input field
             TextField(
               controller: _usernameController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Username',
                 hintText: 'Masukkan username Anda',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Password input field
             TextField(
               controller: _passwordController,
@@ -67,7 +79,9 @@ class _LoginScreenState extends State<LoginScreen> {
               decoration: InputDecoration(
                 labelText: 'Password',
                 hintText: 'Masukkan password Anda',
-                border: const OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscureText ? Icons.visibility_off : Icons.visibility,
@@ -81,17 +95,21 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Login button
             ElevatedButton(
               onPressed: _login,
               child: const Text('Login'),
               style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue, // Warna tombol biru
                 minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0), // Sudut membulat
+                ),
               ),
             ),
 
-            // Tombol Register dengan teks "Klik di sini"
+            // Tombol Register
             Center(
               child: TextButton(
                 onPressed: () {
@@ -103,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: const Text(
                   'Belum punya akun? Klik di sini',
                   style: TextStyle(
-                    color: Colors.blue,
+                    color: Colors.blue, // Warna teks biru
                     fontWeight: FontWeight.bold,
                   ),
                 ),

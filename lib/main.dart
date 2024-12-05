@@ -1,25 +1,22 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:responsi_naura/screen/home_screen.dart';
 import 'package:responsi_naura/screen/login_screen.dart';
-import 'package:responsi_naura/screen/register_screen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(AmiiboApp());
 }
 
-class MyApp extends StatelessWidget {
+class AmiiboApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: ' Nitendo Amiibo App',
-      debugShowCheckedModeBanner: false, // Hilangkan label debug
-      initialRoute: '/login', // Halaman pertama yang ditampilkan
-      routes: {
-        '/login': (context) => LoginScreen(),
-        '/register': (context) => RegisterScreen(),
-        '/home': (context) => HomeScreen(), // Pastikan route ke home benar
-        // Tambahkan route untuk halaman lainnya jika diperlukan
-      },
+      debugShowCheckedModeBanner: false,
+      title: 'Nintendo Amiibo App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: LoginScreen(),
     );
   }
 }

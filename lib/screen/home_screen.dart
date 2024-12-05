@@ -1,157 +1,144 @@
 import 'package:flutter/material.dart';
-import 'package:responsi_naura/screen/favorite_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../services/api_services.dart';
+import 'package:responsi_naura/model/amiibo.dart';
+import 'package:responsi_naura/services/api_service.dart';
+import 'package:responsi_naura/services/local_storage_service.dart';
+import 'detail_screen.dart';
+import 'favorite_screen.dart';
 
-
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
-
+class Home extends StatefulWidget {
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _HomeState createState() => _HomeState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  late Future<List<String>> _favoriteAnime;
+class _HomeState extends State<Home> {
+  late Future<List<Amiibo>> futureAmiibo;
+  List<Amiibo> favoriteAmiibo = [];
 
   @override
   void initState() {
     super.initState();
-    _favoriteAnime = _loadFavorites();
+    futureAmiibo = ApiService().fetchAmiibo();
+    loadFavorites();
   }
 
-  Future<List<String>> _loadFavorites() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList('favorites') ?? [];
+  void loadFavorites() async {
+    favoriteAmiibo = await LocalStorageService().getFavorites();
+    setState(() {});
   }
 
-  Future<void> _addToFavorites(anime) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> favoriteMeals = prefs.getStringList('favorites') ?? [];
-    if (!favoriteMeals.contains(anime.id)) {
-      favoriteMeals.add(anime.id);
-    }
-    await prefs.setStringList('favorites', favoritesAnime);
+  void toggleFavorite(Amiibo amiibo) {
     setState(() {
-      _favoriteAnime = Future.value(favoritesAnime);
+      if (favoriteAmiibo.contains(amiibo)) {
+        favoriteAmiibo.remove(amiibo);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${amiibo.name} removed from favorites!')),
+        );
+      } else {
+        favoriteAmiibo.add(amiibo);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${amiibo.name} added to favorites!')),
+        );
+      }
     });
-  }
-
-  Future<void> _removeFromFavorites(Anime) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> favoriteMeals = prefs.getStringList('favorites') ?? [];
-    favoriteMeals.remove(Anime.id);
-    await prefs.setStringList('favorites', favoriteMeals);
-    setState(() {
-      _favoriteAnime = Future.value(favoriteMeals);
-    });
+    LocalStorageService().saveFavorites(favoriteAmiibo);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nitendo Amibo List'),
-        backgroundColor: Colors.deepPurple, // Matching the theme color (similar to DetailScreen)
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FavoritesScreen()),
-                );
-              },
-              child: Row(
-                children: const [
-                  Icon(Icons.favorite, color: Colors.white), // Icon color
-                  SizedBox(width: 4),
-                  Text(
-                    'Favorit Saya',
-                    style: TextStyle(color: Colors.white), // Text color
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        title: Text('Amiibo List'),
       ),
-      body: FutureBuilder<List<Meal>>(
-        future: ApiService().fetchMeals(),
+      body: FutureBuilder<List<Amiibo>>(
+        future: futureAmiibo,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            final meals = snapshot.data!;
-            return FutureBuilder<List<String>>(
-              future: _favoriteMeals,
-              builder: (context, favoriteSnapshot) {
-                if (favoriteSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (favoriteSnapshot.hasError) {
-                  return Center(child: Text('Error: ${favoriteSnapshot.error}'));
-                } else if (favoriteSnapshot.hasData) {
-                  final favoriteMeals = favoriteSnapshot.data!;
-                  return ListView.builder(
-                    itemCount: meals.length,
-                    itemBuilder: (context, index) {
-                      final meal = meals[index];
-                      bool isFavorite = favoriteMeals.contains(meal.id);
-
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          title: Text(meal.name),
-                          subtitle: Text(meal.category),
-                          leading: Image.network(meal.image, width: 50, fit: BoxFit.cover),
-                          trailing: IconButton(
-                            icon: Icon(
-                              isFavorite ? Icons.favorite : Icons.favorite_border,
-                              color: isFavorite ? Colors.red : null,
-                            ),
-                            onPressed: () {
-                              if (isFavorite) {
-                                _removeFromFavorites(meal); 
-                              } else {
-                                _addToFavorites(meal); 
-                              }
-                            },
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DetailScreen(meal.id), 
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  );
-                } else {
-                  return const Center(child: Text('No meals available'));
-                }
-              },
-            );
-          } else {
-            return const Center(child: Text('No meals available'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('No data found'));
           }
+
+          List<Amiibo> amiiboList = snapshot.data!;
+          
+          return Column(
+            children: [
+              // Menambahkan tulisan "Nintendo Amiibo List" di tengah
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                alignment: Alignment.center,
+                child: Text(
+                  'Nintendo Amiibo List',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black, // Warna teks
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: amiiboList.length,
+                  itemBuilder: (context, index) {
+                    final amiibo = amiiboList[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DetailScreen(amiibo: amiibo),
+                            ),
+                          );
+                        },
+                        leading: Image.network(amiibo.image),
+                        title: Text(amiibo.name),
+                        subtitle: Text(amiibo.gameSeries),
+                        trailing: IconButton(
+                          icon: Icon(
+                            favoriteAmiibo.contains(amiibo)
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: favoriteAmiibo.contains(amiibo) ? Colors.red : null,
+                          ),
+                          onPressed: () => toggleFavorite(amiibo),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushReplacementNamed(context, '/login');
+      bottomNavigationBar: BottomNavigationBar(
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite),
+            label: 'Favorites',
+          ),
+        ],
+        onTap: (index) {
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FavoriteScreen(favoriteAmiibo: favoriteAmiibo),
+              ),
+            );
+          }
         },
-        child: const Icon(Icons.exit_to_app),
-        backgroundColor: Colors.red, 
       ),
     );
   }
